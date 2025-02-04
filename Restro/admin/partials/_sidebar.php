@@ -123,6 +123,11 @@ while ($admin = $res->fetch_object()) {
               <i class="fas fa-file-invoice-dollar text-primary"></i> Receipts
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="generate_qrcodes.php">
+            <i class="fa-solid fa-qrcode"></i> genrerate qrcode
+            </a>
+          </li>
         </ul>
         <!-- Divider -->
         <hr class="my-3">
