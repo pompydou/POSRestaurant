@@ -11,6 +11,12 @@ use Endroid\QrCode\Writer\PngWriter;
     die("Accès non autorisé.");
 }*/
 
+$dir = __DIR__ . "./assets/qrcodes/";
+if (!is_dir($dir)) {
+    mkdir($dir, 0777, true); // Crée le dossier avec les bonnes permissions
+}
+
+
 // Récupérer les tables depuis la base de données
 $tables = [];
 $ret = "SELECT * FROM rpos_tables";
@@ -19,15 +25,24 @@ $stmt->execute();
 $res = $stmt->get_result();
 
 // Générer les QR Codes pour chaque table
-while ($table = $res->fetch_object()) {
-    $url = "http://localhost/RestaurantPOS/Restro/client/menu.php?table_id=" . $table->table_id;
-    $qrCode = new QrCode($url);
-    $writer = new PngWriter();
-    $qrCodePath = './assets/qrcodes/table_' . $table->table_id . '.png'; // Correction du chemin
-    $writer->write($qrCode)->saveToFile($qrCodePath);
-    $tables[] = $table;
+// Définir l'URL de base en fonction de l'environnement
+if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1') {
+  // Environnement local
+  $base_url = "http://localhost/RestaurantPOS/Restro/client/";
+} else {
+  // Environnement de production (hébergé)
+  $base_url = "https://pos-resto-3xp2n.kinsta.app/Restro/client/";
 }
 
+// Générer les QR Codes pour chaque table
+while ($table = $res->fetch_object()) {
+  $url = $base_url . "menu.php?table_id=" . $table->table_id;
+  $qrCode = new QrCode($url);
+  $writer = new PngWriter();
+  $qrCodePath = './assets/qrcodes/table_' . $table->table_id . '.png'; // Correction du chemin
+  $writer->write($qrCode)->saveToFile($qrCodePath);
+  $tables[] = $table;
+}
 // Inclure les fichiers partiels
 require_once('../admin/partials/_head.php');
 ?>
