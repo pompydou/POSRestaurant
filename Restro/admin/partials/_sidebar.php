@@ -125,7 +125,7 @@ while ($admin = $res->fetch_object()) {
           </li>
           <li class="nav-item">
             <a class="nav-link" href="generate_qrcodes.php">
-            <i class="fa-solid fa-qrcode"></i> genrerate qrcode
+            <i class="fas fa-solid fa-qrcode text-primary"></i> genrerate qrcode
             </a>
           </li>
         </ul>

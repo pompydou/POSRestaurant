@@ -6,16 +6,15 @@ require '../vendor/autoload.php'; // Charger Endroid QR Code
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\PngWriter;
 
-// Vérifier si l'utilisateur est connecté et est administrateur
-/*if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    die("Accès non autorisé.");
-}*/
 
-$dir = __DIR__ . "./assets/qrcodes/";
+
+// Chemin absolu vers le dossier des QR Codes
+$dir = __DIR__ . '/../admin/assets/qrcodes';
+
+// Créer le dossier s'il n'existe pas
 if (!is_dir($dir)) {
-    mkdir($dir, 0777, true); // Crée le dossier avec les bonnes permissions
+  mkdir($dir, 0777, true); // Crée le dossier avec les permissions maximales (lecture/écriture/exécution)
 }
-
 
 // Récupérer les tables depuis la base de données
 $tables = [];
@@ -24,24 +23,31 @@ $stmt = $mysqli->prepare($ret);
 $stmt->execute();
 $res = $stmt->get_result();
 
-// Générer les QR Codes pour chaque table
 // Définir l'URL de base en fonction de l'environnement
 if ($_SERVER['HTTP_HOST'] === 'localhost' || $_SERVER['HTTP_HOST'] === '127.0.0.1') {
-  // Environnement local
-  $base_url = "http://localhost/RestaurantPOS/Restro/client/";
+    // Environnement local
+    $base_url = "http://localhost/RestaurantPOS/Restro/client/";
 } else {
-  // Environnement de production (hébergé)
-  $base_url = "https://pos-resto-3xp2n.kinsta.app/Restro/client/";
+    // Environnement de production (hébergé)
+    $base_url = "https://pos-resto-3xp2n.kinsta.app/Restro/client/";
 }
 
 // Générer les QR Codes pour chaque table
 while ($table = $res->fetch_object()) {
-  $url = $base_url . "menu.php?table_id=" . $table->table_id;
-  $qrCode = new QrCode($url);
-  $writer = new PngWriter();
-  $qrCodePath = './assets/qrcodes/table_' . $table->table_id . '.png'; // Correction du chemin
-  $writer->write($qrCode)->saveToFile($qrCodePath);
-  $tables[] = $table;
+    $url = $base_url . "menu.php?table_id=" . $table->table_id;
+
+    try {
+        $qrCode = new QrCode($url);
+        $writer = new PngWriter();
+        $qrCodePath = $dir . 'table_' . $table->table_id . '.png'; // Correction du chemin
+
+        // Écrire le QR Code dans le fichier
+        $writer->write($qrCode)->saveToFile($qrCodePath);
+
+        $tables[] = $table;
+    } catch (\Exception $e) {
+        echo "Erreur lors de la génération du QR Code pour la table " . htmlspecialchars($table->table_number) . ": " . $e->getMessage();
+    }
 }
 // Inclure les fichiers partiels
 require_once('../admin/partials/_head.php');
